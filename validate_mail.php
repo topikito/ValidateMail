@@ -83,7 +83,7 @@ class ValidateMail
 		'tempomail.fr', 'tempemail.net',
 		'spamfree24.org', 'kasmail.com',
 		'spammotel.com', 'greensloth.com',
-		'spamspot.com'
+		'spamspot.com', 'yopmail.com'
 	);
 	private $_allValid = true;
 	private $_sock;
