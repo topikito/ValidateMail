@@ -6,7 +6,7 @@
  * @license http://www.freebsd.org/copyright/freebsd-license.html FreeBSD Licence
  * @author roberto@nygaard.es - Roberto Nygaard - @topikito - github.com/topikito
  * @version 0.1
- * 
+ *
  * @example
  *	$emails = array(...);
  *	$ValidateMail = new ValidateMail();
@@ -14,15 +14,12 @@
  */
 class ValidateMail
 {
-	const DEBUG_MODE = false;
 	const MAX_READ_TIME = 6;
 	const MAX_CONN_TIME = 30;
 	const SOCKET_READ_SIZE = 2082;
 	const SOCKET_CODE_SUCCESS = 220;
 	const SMTP_CODE_ACCEPTED = 250;
 	const SMTP_CODE_EMAIL_REJECTED = 550;
-	const SMTP_CODE_GREYLISTED_1 = 451;
-	const SMTP_CODE_GREYLISTED_2 = 452;
 	const SMTP_CODE_SYNTAX_ERROR = 501;
 	const LEVEL_MORPHOLOGIC = 0;
 	const LEVEL_BLACKLIST = 1;
@@ -85,15 +82,17 @@ class ValidateMail
 		'spammotel.com', 'greensloth.com',
 		'spamspot.com', 'yopmail.com'
 	);
-	private $_allValid = true;
+
 	private $_sock;
-	private $_result;
 	private $_local;
+	private $_result;
 	private $_domain;
 	private $_domains;
+	private $_allValid = true;
 	private $_smtpPort = 25;
 	private $_fromUser = 'user';
 	private $_fromDomain = 'localhost';
+	private $_debugFlag = false;
 
 	/**
 	 * Specifies the level of paranoia:
@@ -340,6 +339,16 @@ class ValidateMail
 		return false;
 	}
 
+	public function enableDebug()
+	{
+		$this->_debugFlag = true;
+	}
+
+	public function disableDebug()
+	{
+		$this->_debugFlag = false;
+	}
+
 	/**
 	 * Prints the debug information
 	 * @param string $text
@@ -347,7 +356,7 @@ class ValidateMail
 	 */
 	protected function _debug($text, $nl = true)
 	{
-		if (self::DEBUG_MODE)
+		if ($this->_debugFlag === true)
 		{
 			echo htmlentities($text);
 			if ($nl)
@@ -374,7 +383,7 @@ class ValidateMail
 
 		return $this;
 	}
-	
+
 	/**
 	 * Returns the results of the validation
 	 * @return bool|array
@@ -385,7 +394,7 @@ class ValidateMail
 		{
 			return null;
 		}
-		
+
 		if ($this->_allValid)
 		{
 			$this->_result = true;
