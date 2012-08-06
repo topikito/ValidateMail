@@ -373,7 +373,7 @@ class ValidateMail
 	 * @param string $emails
 	 * @return string
 	 */
-	public function __construct($emails)
+	public function __construct($emails = array())
 	{
 
 		if (!empty($emails))
