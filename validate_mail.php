@@ -5,7 +5,7 @@
  *
  * @license http://www.freebsd.org/copyright/freebsd-license.html FreeBSD Licence
  * @author roberto@nygaard.es - Roberto Nygaard - @topikito - github.com/topikito
- * @version 0.1
+ * @version 1.0
  *
  * @example
  *	$emails = array(...);
@@ -24,20 +24,23 @@ class ValidateMail
 	const LEVEL_MORPHOLOGIC = 0;
 	const LEVEL_BLACKLIST = 1;
 	const LEVEL_DNS = 2;
-	const LEVEL_SMTP = 3;
+	const LEVEL_DNS_MX = 3;
+	const LEVEL_SMTP = 4;
 	const CHECK_SUCCESS = 1000;
 	const CHECK_ERROR_MORPHO = 1001;
 	const CHECK_ERROR_BLACKLIST = 1002;
 	const CHECK_ERROR_DNS = 1003;
-	const CHECK_ERROR_SMTP = 1004;
-	const CHECK_ERROR_SERVER_UNKNOWN = 1005;
+	const CHECK_ERROR_DNS_MX = 1004;
+	const CHECK_ERROR_SMTP = 1005;
+	const CHECK_ERROR_SERVER_UNKNOWN = 1099;
 
 	private $_errorCode = array(
 		1001 => 'MORPHOLOGICAL ERROR',
 		1002 => 'IN_BLACKLIST',
 		1003 => 'DNS_ERROR',
-		1004 => 'SMTP_ERROR',
-		1005 => 'SERVER_ERROR'
+		1004 => 'DNS_MX_ERROR',
+		1005 => 'SMTP_ERROR',
+		1099 => 'SERVER_ERROR'
 	);
 
 	/**
@@ -96,13 +99,14 @@ class ValidateMail
 
 	/**
 	 * Specifies the level of paranoia:
-	 * 0.- Checks ONLY the morphology of the email
-	 * 1.- Level 0 + BlackList checking
-	 * 2.- Level 1 + Checks the DNS Records of the domain
-	 * 3.- Level 2 + Asks the SMTP server for the email
+	 * 0 = Checks ONLY the morphology of the email
+	 * 1 = Level 0 + BlackList checking
+	 * 2 = Level 1 + Checks the DNS Records of the domain
+	 * 3 = Level 2 + Checks the MX entries of the DNS of the domain
+	 * 4 = Level 3 + Asks the SMTP server for the email
 	 * @var int
 	 */
-	private $_levelOfParanoia = self::LEVEL_DNS;
+	private $_levelOfParanoia = self::LEVEL_DNS_MX;
 
 	/**
 	 * We add the email as invalid and specify the reason why its so.
@@ -321,6 +325,18 @@ class ValidateMail
 
 		return $reply;
 	}
+	
+	/**
+	 * Retrieves the A or CNAME entries of a domain
+	 * @param string $domain
+	 * @return boolean
+	 */
+	protected function _checkDomainHasEntries($domain)
+	{
+		return (checkdnsrr($domain) ||
+				checkdnsrr($domain, 'A') || 
+				checkdnsrr($domain, 'CNAME'));
+	}
 
 	/**
 	 * Retrieves the MX entries of a domain
@@ -531,12 +547,20 @@ class ValidateMail
 				}
 			}
 		}
-
+		
 		if ($this->_levelOfParanoia >= self::LEVEL_DNS) //CHECK DNS
+		{
+			if (!$this->_checkDomainHasEntries($domain))
+			{
+				return self::CHECK_ERROR_DNS;
+			}
+		}
+
+		if ($this->_levelOfParanoia >= self::LEVEL_DNS_MX) //CHECK MAIL ENTRIES
 		{
 			if (!$this->_getDomainMxEntries($domain))
 			{
-				return self::CHECK_ERROR_DNS;
+				return self::CHECK_ERROR_DNS_MX;
 			}
 		}
 
